@@ -12,39 +12,17 @@ class Checker
     {
         if ($argValue === null) throw new \InvalidArgumentException("'$argName' must not be null");
 
-        if (is_object($argValue)) {
-            // Class type.
-            $argTypeName = get_class($argValue);
-        } else {
-            // Built-in type.
-            $argTypeName = gettype($argValue);
-        }
+        $argTypeName = is_object($argValue) ? get_class($argValue) : gettype($argValue);
+
         throw new \InvalidArgumentException("'$argName' has bad type; expecting $expectedTypeName, got $argTypeName");
     }
 
-    static function argResource($argName, $argValue)
+    static function __callStatic($methodName, $arguments)
     {
-        if (!is_resource($argValue)) self::throwError($argName, $argValue, "resource");
-    }
-
-    static function argCallable($argName, $argValue)
-    {
-        if (!is_callable($argValue)) self::throwError($argName, $argValue, "callable");
-    }
-
-    static function argBool($argName, $argValue)
-    {
-        if (!is_bool($argValue)) self::throwError($argName, $argValue, "boolean");
-    }
-
-    static function argArray($argName, $argValue)
-    {
-        if (!is_array($argValue)) self::throwError($argName, $argValue, "array");
-    }
-
-    static function argString($argName, $argValue)
-    {
-        if (!is_string($argValue)) self::throwError($argName, $argValue, "string");
+        $argValue = $arguments[1];
+        $argName = $arguments[0];
+        $methodName = strtolower(substr($methodName, 3));
+        if (!call_user_func('is_' . $methodName, $argValue)) self::throwError($argName, $argValue, $methodName);
     }
 
     static function argStringOrNull($argName, $argValue)
